@@ -1,0 +1,45 @@
+{
+  "name": "pse-edge",
+  "description": "A NodeJS wrapper for the PSE Edge platform",
+  "version": "1.0.0",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "author": "Brendon Dulam",
+  "license": "MIT",
+  "keywords": [
+    "PSE",
+    "stock",
+    "PSE Edge",
+    "market",
+    "Philippines",
+    "disclosure",
+    "news",
+    "company",
+    "trading"
+  ],
+  "devDependencies": {
+    "@types/jest": "^27.4.1",
+    "codecov": "^3.8.3",
+    "jest": "^27.5.1",
+    "ts-jest": "^27.1.3",
+    "ts-node": "^10.6.0",
+    "tsc": "^2.0.4",
+    "tslint": "^6.1.3",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "^4.6.2"
+  },
+  "files": [
+    "lib/**/*"
+  ],
+  "scripts": {
+    "test": "jest --config jestconfig.json",
+    "build": "tsc",
+    "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
+    "lint": "tslint -p tsconfig.json",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm test && npm run lint",
+    "preversion": "npm run lint",
+    "version": "npm run format && git add -A src",
+    "postversion": "git push && git push --tags"
+  }
+}
