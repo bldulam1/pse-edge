@@ -17,6 +17,10 @@
     "company",
     "trading"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bldulam1/pse-edge.git"
+  },
   "devDependencies": {
     "@types/jest": "^27.4.1",
     "codecov": "^3.8.3",
@@ -41,5 +45,11 @@
     "preversion": "npm run lint",
     "version": "npm run format && git add -A src",
     "postversion": "git push && git push --tags"
+  },
+  "dependencies": {
+    "axios": "^0.26.0",
+    "dataloader": "^2.0.0",
+    "date-fns": "^2.28.0",
+    "node-html-parser": "^5.2.0"
   }
 }
