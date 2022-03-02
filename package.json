@@ -17,6 +17,10 @@
     "company",
     "trading"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bldulam1/pse-edge.git"
+  },
   "devDependencies": {
     "@types/jest": "^27.4.1",
     "codecov": "^3.8.3",

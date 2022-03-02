@@ -1,4 +1,4 @@
-import { fetchStocksAll, stockLoader } from '../index';
+import { fetchStocksAll, stockLoader } from '../directory';
 
 test('PSE Stocks list', async () => {
   const stocks = await fetchStocksAll();

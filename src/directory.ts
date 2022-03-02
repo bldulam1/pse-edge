@@ -1,6 +1,7 @@
 import axios from 'axios';
 import DataLoader = require('dataloader');
 import { parse } from 'node-html-parser';
+import { unEntity } from './common';
 
 export interface PseStock {
   companyId: string;
@@ -67,7 +68,3 @@ export const stockLoader = new DataLoader(async (symbols: readonly string[]) => 
   const dict = new Map(stocks.map((s) => [s.symbol, s]));
   return symbols.map((s) => dict.get(s.toUpperCase()));
 });
-
-const unEntity = (str: string) => {
-  return str.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
-};
