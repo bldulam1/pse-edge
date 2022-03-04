@@ -1,0 +1,15 @@
+{
+  "name": "@pse-edge/example",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Brendon Dulam",
+  "license": "MIT",
+  "dependencies": {
+    "pse-edge": "^1.0.2"
+  },
+  "devDependencies": {
+    "ts-node": "^10.6.0",
+    "tsc": "^2.0.4",
+    "typescript": "^4.6.2"
+  }
+}
