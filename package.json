@@ -1,7 +1,7 @@
 {
   "name": "pse-edge",
   "description": "A NodeJS wrapper for the PSE Edge platform",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "author": "Brendon Dulam",
