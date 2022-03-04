@@ -17,7 +17,7 @@ export const getHistoricalPrices = async (props: {
   startDate: string | number | Date
   endDate?: string | number | Date
 }) => {
-  const a = await stockLoader.load('GLO')
+  const a = await stockLoader.load(props.symbol.toUpperCase())
 
   if (a) {
     return axios
