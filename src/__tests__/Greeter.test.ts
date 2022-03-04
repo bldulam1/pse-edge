@@ -1,1 +1,1 @@
-test('Fetch Symbol', () => {});
+test('Fetch Symbol', () => {})

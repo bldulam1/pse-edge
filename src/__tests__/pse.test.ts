@@ -1,23 +1,23 @@
-import { fetchStocksAll, stockLoader } from '../directory';
+import { fetchStocksAll, stockLoader } from '../directory'
 
 test('PSE Stocks list', async () => {
-  const stocks = await fetchStocksAll();
+  const stocks = await fetchStocksAll()
   stocks.forEach((stock) => {
-    expect(stock).toBeInstanceOf(Object);
-  });
-});
+    expect(stock).toBeInstanceOf(Object)
+  })
+})
 
 test('Fetch Symbol GLO', async () => {
-  const glo = await stockLoader.load('GLO');
-  expect(glo?.secName).toEqual('Globe Telecom, Inc.');
-});
+  const glo = await stockLoader.load('GLO')
+  expect(glo?.secName).toEqual('Globe Telecom, Inc.')
+})
 
 test('Fetch Symbol TEL', async () => {
-  const glo = await stockLoader.load('tel');
-  expect(glo?.secName).toEqual('PLDT Inc.');
-});
+  const tel = await stockLoader.load('tel')
+  expect(tel?.secName).toEqual('PLDT Inc.')
+})
 
 test('Fetch Symbol ALI', async () => {
-  const glo = await stockLoader.load('ali');
-  expect(glo?.secName).toEqual('Ayala Land, Inc.');
-});
+  const ali = await stockLoader.load('ali')
+  expect(ali?.secName).toEqual('Ayala Land, Inc.')
+})

@@ -1,16 +1,16 @@
-import axios from 'axios';
-import DataLoader = require('dataloader');
-import { parse } from 'node-html-parser';
-import { unEntity } from './common';
+import axios from 'axios'
+import DataLoader = require('dataloader')
+import { parse } from 'node-html-parser'
+import { unEntity } from './common'
 
 export interface PseStock {
-  companyId: string;
-  listingDate: Date;
-  secName: string;
-  sector: string;
-  securityId: string;
-  subSector: string;
-  symbol: string;
+  companyId: string
+  listingDate: Date
+  secName: string
+  sector: string
+  securityId: string
+  subSector: string
+  symbol: string
 }
 
 const fetchStocksByPage = async (pageNo: number) => {
@@ -25,12 +25,12 @@ const fetchStocksByPage = async (pageNo: number) => {
     .then((nodes) => {
       if (nodes) {
         return nodes.map((node) => {
-          const a = node.querySelector('a');
+          const a = node.querySelector('a')
           if (a) {
-            const [companyId, securityId] = a.rawAttributes.onclick.split(/\(|\)/)[1].replace(/'/g, '').split(',');
+            const [companyId, securityId] = a.rawAttributes.onclick.split(/\(|\)/)[1].replace(/'/g, '').split(',')
             const [secName, symbol, sector, subSector, listingDate] = node
               .querySelectorAll('td')
-              .map((v) => v.innerText);
+              .map((v) => v.innerText)
 
             return {
               securityId,
@@ -40,31 +40,31 @@ const fetchStocksByPage = async (pageNo: number) => {
               sector,
               subSector: unEntity(subSector),
               listingDate: new Date(listingDate),
-            } as PseStock;
+            } as PseStock
           }
-        });
+        })
       }
-      return [];
-    });
-};
+      return []
+    })
+}
 
 export const fetchStocksAll = async () => {
-  const stocks: PseStock[] = [];
-  let pageNo = 1;
+  const stocks: PseStock[] = []
+  let pageNo = 1
   while (true) {
-    const newStocks = await fetchStocksByPage(pageNo);
+    const newStocks = await fetchStocksByPage(pageNo)
     if (newStocks.length <= 1) {
-      break;
+      break
     }
 
-    newStocks.forEach((s) => s && stocks.push(s));
-    pageNo++;
+    newStocks.forEach((s) => s && stocks.push(s))
+    pageNo++
   }
-  return stocks;
-};
+  return stocks
+}
 
 export const stockLoader = new DataLoader(async (symbols: readonly string[]) => {
-  const stocks = await fetchStocksAll();
-  const dict = new Map(stocks.map((s) => [s.symbol, s]));
-  return symbols.map((s) => dict.get(s.toUpperCase()));
-});
+  const stocks = await fetchStocksAll()
+  const dict = new Map(stocks.map((s) => [s.symbol, s]))
+  return symbols.map((s) => dict.get(s.toUpperCase()))
+})
