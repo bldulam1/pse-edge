@@ -8,7 +8,7 @@ This is a wrapper of the PSE Edge backend API, useful for scraping data from PSE
 
 - [x] Official List of stocks by sector
 - [x] Historical Prices
-- [ ] Public Company disclosures
+- [x] Public Company disclosures
 - [ ] Company News
 - [ ] Company Information
 
