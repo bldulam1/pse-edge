@@ -8,5 +8,5 @@
     "strict": true,
     "esModuleInterop": true
   },
-  "exclude": ["node_modules", "lib", "src/__tests__"]
+  "exclude": ["node_modules", "lib", "src/__tests__", "example"]
 }
