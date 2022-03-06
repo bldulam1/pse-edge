@@ -21,7 +21,7 @@ export const getFinancialReports = async (sym: string) => {
         const is1yrows = getTable(is1y)
         const is1qrows = getTable(is1q)
 
-        return <PseFinancial>{
+        return {
           annual: {
             balanceSheet: {
               CurrentYear: getBalanceSheet(0, bs1yRows),
@@ -44,15 +44,15 @@ export const getFinancialReports = async (sym: string) => {
               PreviousYearToDate: getIncomeStatement(3, is1qrows),
             },
           },
-        }
+        } as PseFinancial
       })
   }
 
   throw new Error(`${sym} not found`)
 }
 
-const getTable = (v: HTMLElement) => {
-  return v.querySelectorAll('tr').map((tr) => tr.querySelectorAll('td').map((v) => toNumber(v.innerText)))
+const getTable = (w: HTMLElement) => {
+  return w.querySelectorAll('tr').map((tr) => tr.querySelectorAll('td').map((v) => toNumber(v.innerText)))
 }
 
 const getIncomeStatement = (col: number, rows: (number | undefined)[][]) => {
@@ -65,7 +65,7 @@ const getIncomeStatement = (col: number, rows: (number | undefined)[][]) => {
     EarningsPerShareBasic,
     EarningsPerShareDiluted,
   ] = rows.map((row) => row[col])
-  return <IncomeStatement>{
+  return {
     GrossRevenue,
     GrossExpense,
     IncomeBeforeTax,
@@ -73,7 +73,7 @@ const getIncomeStatement = (col: number, rows: (number | undefined)[][]) => {
     NetIncomeAttributableToParent,
     EarningsPerShareBasic,
     EarningsPerShareDiluted,
-  }
+  } as IncomeStatement
 }
 
 const getBalanceSheet = (col: number, rows: (number | undefined)[][]) => {
@@ -86,7 +86,7 @@ const getBalanceSheet = (col: number, rows: (number | undefined)[][]) => {
     EarningsPerShareBasic,
     EarningsPerShareDiluted,
   ] = rows.map((row) => row[col])
-  return <BalanceSheet>{
+  return {
     GrossRevenue,
     GrossExpense,
     IncomeBeforeTax,
@@ -94,7 +94,7 @@ const getBalanceSheet = (col: number, rows: (number | undefined)[][]) => {
     NetIncomeAttributableToParent,
     EarningsPerShareBasic,
     EarningsPerShareDiluted,
-  }
+  } as BalanceSheet
 }
 
 interface BalanceSheet {
