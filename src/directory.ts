@@ -48,6 +48,10 @@ const fetchStocksByPage = async (pageNo: number) => {
     })
 }
 
+/**
+ * Fetches all stocks listed in the Philippine Stock Exchange
+ * @returns PseStock
+ */
 export const fetchStocksAll = async () => {
   const stocks: PseStock[] = []
   let pageNo = 1

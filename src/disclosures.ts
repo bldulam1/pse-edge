@@ -3,6 +3,11 @@ import { parse } from 'node-html-parser'
 
 import { stockLoader } from './directory'
 
+/**
+ * Gets company disclosures of a ticker symbol from PSE Edge.
+ * @param sym Ticker Symbol (e.g. GLO, TEL, ALI)
+ * @returns CompanyDisclosure
+ */
 export const getCompanyDisclosures = async (sym: string) => {
   const companyId = await stockLoader.load(sym).then((v) => v?.companyId)
 

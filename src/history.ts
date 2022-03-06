@@ -12,6 +12,9 @@ interface TSEOHLC {
   LOW: number
 }
 
+/**
+ * Gets historical prices (OHLC data) of a ticker symbol from PSE Edge.
+ */
 export const getHistoricalPrices = async (props: {
   symbol: string
   startDate: string | number | Date
@@ -39,4 +42,6 @@ export const getHistoricalPrices = async (props: {
         })),
       )
   }
+
+  throw new Error(`${props.symbol} not found`)
 }

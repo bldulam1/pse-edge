@@ -3,6 +3,9 @@ import { parse } from 'node-html-parser'
 import { camelCase } from './common'
 import { stockLoader } from './directory'
 
+/**
+ * Gets company information of a ticker symbol
+ */
 export const getCompanyInfo = async (sym: string) => {
   const stock = await stockLoader.load(sym)
 
