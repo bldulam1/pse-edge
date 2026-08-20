@@ -1,154 +1,129 @@
-import axios from 'axios'
 import { parse, HTMLElement } from 'node-html-parser'
+import { httpClient, wrapHttpError } from './http-client'
+import { validateSymbol } from './common'
 import { stockLoader } from './directory'
+import { BalanceSheet, IncomeStatement, PseFinancial } from './types'
+
+const PSE_FINANCIAL_URL = 'https://edge.pse.com.ph/companyPage/financial_reports_view.do'
+
+/**
+ * Parses a financial number from PSE format.
+ * Handles parenthesized negatives, commas, and whitespace.
+ * Returns undefined for empty/invalid values.
+ */
+const toNumber = (v?: string): number | undefined => {
+  if (!v || !v.trim()) return undefined
+
+  const isNegative = /\(|\)/.test(v)
+  const cleaned = v.replace(/[(),\s]/g, '')
+  const parsed = parseFloat(cleaned)
+
+  if (isNaN(parsed)) return undefined
+  return isNegative ? -parsed : parsed
+}
+
+/**
+ * Extracts a 2D array of numbers from an HTML table.
+ */
+const parseTableRows = (table: HTMLElement): (number | undefined)[][] => {
+  return table
+    .querySelectorAll('tr')
+    .map((tr) => tr.querySelectorAll('td').map((td) => toNumber(td.innerText)))
+}
+
+/**
+ * Extracts a column value from row data by column index.
+ */
+const getColumnValue = (rows: (number | undefined)[][], col: number, row: number): number | undefined => {
+  return rows[row]?.[col]
+}
+
+/**
+ * Builds an IncomeStatement from table data at the given column index.
+ */
+const buildIncomeStatement = (col: number, rows: (number | undefined)[][]): IncomeStatement => ({
+  GrossRevenue: getColumnValue(rows, col, 0),
+  GrossExpense: getColumnValue(rows, col, 1),
+  IncomeBeforeTax: getColumnValue(rows, col, 2),
+  NetIncomeAfterTax: getColumnValue(rows, col, 3),
+  NetIncomeAttributableToParent: getColumnValue(rows, col, 4),
+  EarningsPerShareBasic: getColumnValue(rows, col, 5),
+  EarningsPerShareDiluted: getColumnValue(rows, col, 6),
+})
+
+/**
+ * Builds a BalanceSheet from table data at the given column index.
+ * Row order must match the PSE financial reports HTML structure.
+ */
+const buildBalanceSheet = (col: number, rows: (number | undefined)[][]): BalanceSheet => ({
+  CurrentAssets: getColumnValue(rows, col, 0),
+  TotalAssets: getColumnValue(rows, col, 1),
+  CurrentLiabilities: getColumnValue(rows, col, 2),
+  TotalLiabilities: getColumnValue(rows, col, 3),
+  RetainedEarningsDeficit: getColumnValue(rows, col, 4),
+  StockholdersEquity: getColumnValue(rows, col, 5),
+  StockholdersEquityParent: getColumnValue(rows, col, 6),
+  BookValuePerShare: getColumnValue(rows, col, 7),
+})
 
 /**
  * Gets financial reports of a ticker symbol from PSE Edge.
  * @param sym Ticker Symbol (e.g. GLO, TEL, ALI)
- * @returns PseFinancial
+ * @returns PseFinancial with annual and quarterly data
  */
-export const getFinancialReports = async (sym: string) => {
-  const stock = await stockLoader.load(sym)
-  if (stock?.companyId) {
-    return axios
-      .get(`https://edge.pse.com.ph/companyPage/financial_reports_view.do?cmpy_id=${stock.companyId}`)
-      .then((v) => parse(v.data))
-      .then((html) => {
-        const [bs1y, is1y, bs1q, is1q] = html.querySelectorAll('table')
+export const getFinancialReports = async (sym: string): Promise<PseFinancial> => {
+  const symbol = validateSymbol(sym)
+  const stock = await stockLoader.load(symbol)
 
-        const bs1yRows = getTable(bs1y)
-        const bs1qRows = getTable(bs1q)
-        const is1yrows = getTable(is1y)
-        const is1qrows = getTable(is1q)
-
-        return {
-          annual: {
-            balanceSheet: {
-              CurrentYear: getBalanceSheet(0, bs1yRows),
-              PreviousYear: getBalanceSheet(1, bs1yRows),
-            },
-            incomeStatement: {
-              CurrentYear: getIncomeStatement(0, is1yrows),
-              PreviousYear: getIncomeStatement(1, is1yrows),
-            },
-          },
-          quarterly: {
-            balanceSheet: {
-              CurrentYear: getBalanceSheet(0, bs1qRows),
-              PreviousYear: getBalanceSheet(1, bs1qRows),
-            },
-            incomeStatement: {
-              CurrentYear: getIncomeStatement(0, is1qrows),
-              PreviousYear: getIncomeStatement(1, is1qrows),
-              CurrentYearToDate: getIncomeStatement(2, is1qrows),
-              PreviousYearToDate: getIncomeStatement(3, is1qrows),
-            },
-          },
-        } as PseFinancial
-      })
+  if (!stock?.companyId) {
+    throw new Error(`Symbol "${symbol}" not found`)
   }
 
-  throw new Error(`${sym} not found`)
-}
+  try {
+    const response = await httpClient.get(PSE_FINANCIAL_URL, {
+      params: { cmpy_id: stock.companyId },
+    })
 
-const getTable = (w: HTMLElement) => {
-  return w.querySelectorAll('tr').map((tr) => tr.querySelectorAll('td').map((v) => toNumber(v.innerText)))
-}
+    const html = parse(response.data)
+    const tables = html.querySelectorAll('table')
 
-const getIncomeStatement = (col: number, rows: (number | undefined)[][]) => {
-  const [
-    GrossRevenue,
-    GrossExpense,
-    IncomeBeforeTax,
-    NetIncomeAfterTax,
-    NetIncomeAttributableToParent,
-    EarningsPerShareBasic,
-    EarningsPerShareDiluted,
-  ] = rows.map((row) => row[col])
-  return {
-    GrossRevenue,
-    GrossExpense,
-    IncomeBeforeTax,
-    NetIncomeAfterTax,
-    NetIncomeAttributableToParent,
-    EarningsPerShareBasic,
-    EarningsPerShareDiluted,
-  } as IncomeStatement
-}
-
-const getBalanceSheet = (col: number, rows: (number | undefined)[][]) => {
-  const [
-    GrossRevenue,
-    GrossExpense,
-    IncomeBeforeTax,
-    NetIncomeAfterTax,
-    NetIncomeAttributableToParent,
-    EarningsPerShareBasic,
-    EarningsPerShareDiluted,
-  ] = rows.map((row) => row[col])
-  return {
-    GrossRevenue,
-    GrossExpense,
-    IncomeBeforeTax,
-    NetIncomeAfterTax,
-    NetIncomeAttributableToParent,
-    EarningsPerShareBasic,
-    EarningsPerShareDiluted,
-  } as BalanceSheet
-}
-
-interface BalanceSheet {
-  CurrentAssets?: number
-  TotalAssets?: number
-  CurrentLiabilities?: number
-  TotalLiabilities?: number
-  RetainedEarningsDeficit?: number
-  StockholdersEquity?: number
-  StockholdersEquityParent?: number
-  BookValuePerShare?: number
-}
-
-interface IncomeStatement {
-  GrossRevenue?: number
-  GrossExpense?: number
-  IncomeBeforeTax?: number
-  NetIncomeAfterTax?: number
-  NetIncomeAttributableToParent?: number
-  EarningsPerShareBasic?: number
-  EarningsPerShareDiluted?: number
-}
-
-interface PseFinancial {
-  annual: {
-    balanceSheet: {
-      CurrentYear: BalanceSheet
-      PreviousYear: BalanceSheet
+    if (tables.length < 4) {
+      throw new Error('Unexpected financial reports page structure')
     }
-    incomeStatement: {
-      CurrentYear: IncomeStatement
-      PreviousYear: IncomeStatement
-    }
-  }
-  quarterly: {
-    balanceSheet: {
-      CurrentYear: BalanceSheet
-      PreviousYear: BalanceSheet
-    }
-    incomeStatement: {
-      CurrentYear: IncomeStatement
-      PreviousYear: IncomeStatement
-      CurrentYearToDate: IncomeStatement
-      PreviousYearToDate: IncomeStatement
-    }
-  }
-}
 
-const toNumber = (v?: string) => {
-  if (v) {
-    if (/\(|\)/.test(v)) {
-      // negative
-      return -parseFloat(v.replace(/\(|\)|\,|\s/g, ''))
+    const [balanceSheetAnnual, incomeStatementAnnual, balanceSheetQuarterly, incomeStatementQuarterly] = tables
+
+    const bsAnnualRows = parseTableRows(balanceSheetAnnual)
+    const isAnnualRows = parseTableRows(incomeStatementAnnual)
+    const bsQuarterlyRows = parseTableRows(balanceSheetQuarterly)
+    const isQuarterlyRows = parseTableRows(incomeStatementQuarterly)
+
+    return {
+      annual: {
+        balanceSheet: {
+          CurrentYear: buildBalanceSheet(0, bsAnnualRows),
+          PreviousYear: buildBalanceSheet(1, bsAnnualRows),
+        },
+        incomeStatement: {
+          CurrentYear: buildIncomeStatement(0, isAnnualRows),
+          PreviousYear: buildIncomeStatement(1, isAnnualRows),
+        },
+      },
+      quarterly: {
+        balanceSheet: {
+          CurrentYear: buildBalanceSheet(0, bsQuarterlyRows),
+          PreviousYear: buildBalanceSheet(1, bsQuarterlyRows),
+        },
+        incomeStatement: {
+          CurrentYear: buildIncomeStatement(0, isQuarterlyRows),
+          PreviousYear: buildIncomeStatement(1, isQuarterlyRows),
+          CurrentYearToDate: buildIncomeStatement(2, isQuarterlyRows),
+          PreviousYearToDate: buildIncomeStatement(3, isQuarterlyRows),
+        },
+      },
     }
-    return parseFloat(v.replace(/\(|\)|\,|\s/g, ''))
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('Unexpected')) throw error
+    wrapHttpError(error, `Failed to fetch financial reports for ${symbol}`)
   }
 }
